@@ -1,25 +1,24 @@
-import{S as u,i as d}from"./assets/vendor-9310f15c.js";(function(){const o=document.createElement("link").relList;if(o&&o.supports&&o.supports("modulepreload"))return;for(const e of document.querySelectorAll('link[rel="modulepreload"]'))r(e);new MutationObserver(e=>{for(const t of e)if(t.type==="childList")for(const n of t.addedNodes)n.tagName==="LINK"&&n.rel==="modulepreload"&&r(n)}).observe(document,{childList:!0,subtree:!0});function a(e){const t={};return e.integrity&&(t.integrity=e.integrity),e.referrerpolicy&&(t.referrerPolicy=e.referrerpolicy),e.crossorigin==="use-credentials"?t.credentials="include":e.crossorigin==="anonymous"?t.credentials="omit":t.credentials="same-origin",t}function r(e){if(e.ep)return;e.ep=!0;const t=a(e);fetch(e.href,t)}})();const f=document.querySelector(".form"),l=document.querySelector(".gallery"),c=document.querySelector(".text-input"),p=new u(".gallery a",{captionsData:"alt",captionDelay:250}),i=document.querySelector(".loader");i.style.display="none";f.addEventListener("submit",s=>{s.preventDefault();const o=c.value;l.innerHTML="",c.value="",i.style.display="block";const a=new URLSearchParams({key:"41611095-6f6895f75fda0efc7328923df",q:o,image_type:"photo",orientation:"horizontal",safesearch:!0});fetch(`https://pixabay.com/api/?${a}`).then(r=>{if(i.style.display="none",!r.ok)throw new Error(r.status);return r.json()}).then(r=>{if(r.hits.length===0){d.error({message:"Sorry, there are no images matching your search query. Please try again!",messageColor:"#FAFAFB",backgroundColor:"#EF4040",position:"topRight"});return}const e=r.hits.reduce((t,n)=>t+m(n),"");l.innerHTML=e,p.refresh()}).catch(r=>{showAlert(r.toString())})});function m(s){return`<li>
-      <a href="${s.largeImageURL}">
-        <img src="${s.webformatURL}" alt="${s.tags}">
+import{S as b,a as w,i as c}from"./assets/vendor-c145bea9.js";(function(){const s=document.createElement("link").relList;if(s&&s.supports&&s.supports("modulepreload"))return;for(const e of document.querySelectorAll('link[rel="modulepreload"]'))n(e);new MutationObserver(e=>{for(const o of e)if(o.type==="childList")for(const r of o.addedNodes)r.tagName==="LINK"&&r.rel==="modulepreload"&&n(r)}).observe(document,{childList:!0,subtree:!0});function i(e){const o={};return e.integrity&&(o.integrity=e.integrity),e.referrerpolicy&&(o.referrerPolicy=e.referrerpolicy),e.crossorigin==="use-credentials"?o.credentials="include":e.crossorigin==="anonymous"?o.credentials="omit":o.credentials="same-origin",o}function n(e){if(e.ep)return;e.ep=!0;const o=i(e);fetch(e.href,o)}})();const p=document.querySelector(".form"),f=document.querySelector(".gallery"),g=document.querySelector(".text-input"),d=document.querySelector(".load-more-btn"),S=new b(".gallery a",{captionsData:"alt",captionDelay:250}),u=document.querySelector(".loader");u.style.display="none";const q="41611095-6f6895f75fda0efc7328923df";let a=1;const m=40;function $(){u.style.display="block"}function y(){u.style.display="none"}async function h(t,s){const i={key:q,q:t,image_type:"photo",orientation:"horizontal",safesearch:!0,page:s,per_page:m},n=new URLSearchParams(i);$();try{const e=await w.get(`https://pixabay.com/api/?${n}`);y();const{hits:o,totalHits:r}=e.data;if(o.length===0){c.error({title:"Error",message:"We're sorry, but you've reached the end of search results.",messageColor:"#FAFAFB",backgroundColor:"#4285F4",position:"topRight"});return}s===1&&(f.innerHTML="");const v=o.reduce((l,L)=>l+k(L),"");if(f.insertAdjacentHTML("beforeend",v),S.refresh(),s*m>=r)d.style.display="none",c.error({title:"Error",message:"We're sorry, but you've reached the end of search results.",position:"topRight"});else{d.style.display="block";const l=document.querySelector(".gallery img").getBoundingClientRect().height;window.scrollBy({top:l*2,behavior:"smooth"})}}catch(e){y(),c.error({title:"Error",message:e.message,position:"topRight"})}}p.addEventListener("submit",t=>{t.preventDefault();const s=g.value.trim();a=1,h(s,a),p.reset()});d.addEventListener("click",()=>{a+=1;const t=g.value.trim();h(t,a)});function k(t){return`<li>
+      <a href="${t.largeImageURL}">
+        <img src="${t.webformatURL}" alt="${t.tags}">
       </a>
       <div class="info">
         <div class="image-info">
           <span>Likes</span>
-          <span class="image-value">${s.likes}</span>
+          <span class="image-value">${t.likes}</span>
         </div>
         <div class="image-info">
           <span>Views</span>
-          <span class="image-value">${s.views}</span>
+          <span class="image-value">${t.views}</span>
         </div>
         <div class="image-info">
           <span>Comments</span>
-          <span class="image-value">${s.comments}</span>
+          <span class="image-value">${t.comments}</span>
         </div>
         <div class="image-info">
           <span>Downloads</span>
-          <span class="image-value">${s.downloads}</span>
+          <span class="image-value">${t.downloads}</span>
         </div>
       </div>
-    </li>
-  `}
+    </li>`}
 //# sourceMappingURL=commonHelpers.js.map
