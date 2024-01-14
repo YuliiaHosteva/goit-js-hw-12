@@ -2,65 +2,114 @@ import SimpleLightbox from "simplelightbox";
 import "simplelightbox/dist/simple-lightbox.min.css";
 import iziToast from "izitoast";
 import "izitoast/dist/css/iziToast.min.css";
+import axios from "axios";
 
 const fetchUsersBtn = document.querySelector(".form");
 const gallery = document.querySelector(".gallery");
-const textInput = document.querySelector('.text-input')
+const textInput = document.querySelector('.text-input');
+const loadMoreBtn = document.querySelector('.load-more-btn');
 const modal = new SimpleLightbox('.gallery a', {
   captionsData: 'alt',
   captionDelay: 250,
 });
 
 const loader = document.querySelector('.loader');
-  loader.style.display = 'none';
+loader.style.display = 'none';
 
+const API_KEY = '41611095-6f6895f75fda0efc7328923df';
+let currentPage = 1;
+const perPage = 40;
 
-fetchUsersBtn.addEventListener('submit', (event) => {
-  event.preventDefault();
-  const usersValue = textInput.value;
-
-  gallery.innerHTML = '';
-  textInput.value = '';
+function showLoader() {
   loader.style.display = 'block';
+}
 
-  const searchParams = new URLSearchParams({
-  key: '41611095-6f6895f75fda0efc7328923df',
-  q: usersValue,
-  image_type: 'photo',
-  orientation: 'horizontal',
-  safesearch: true
-});
+function hideLoader() {
+  loader.style.display = 'none';
+}
 
-  fetch(`https://pixabay.com/api/?${searchParams}`)
-    .then((response) => {
-      loader.style.display = 'none';
-      
-      if (!response.ok) {
-        throw new Error(response.status);
-      }
-      return response.json();
-    })
-  .then((data) => {
-      if (data.hits.length === 0) {
-        iziToast.error({
-          message: 'Sorry, there are no images matching your search query. Please try again!',
-          messageColor: '#FAFAFB',
-          backgroundColor: '#EF4040',
-          position: 'topRight'
-        });
-        return;
+async function searchImages(query, currentPage) {
+  const requestParams = {
+    key: API_KEY,
+    q: query,
+    image_type: 'photo',
+    orientation: 'horizontal',
+    safesearch: true,
+    page: currentPage,
+    per_page: perPage,
+  };
+
+  const searchParams = new URLSearchParams(requestParams);
+
+  showLoader();
+
+  try {
+    const response = await axios.get(`https://pixabay.com/api/?${searchParams}`);
+    hideLoader();
+
+    const { hits, totalHits } = response.data;
+    if (hits.length === 0) {
+      iziToast.error({
+        title: 'Error',
+        message: "We're sorry, but you've reached the end of search results.",
+        messageColor: '#FAFAFB',
+        backgroundColor: '#4285F4',
+        position: 'topRight'
+      });
+      return;
     }
-      const imagesHTML = data.hits.reduce((html, image) => {
+
+    if (currentPage === 1) {
+      gallery.innerHTML = '';
+    }
+
+    const imagesHTML = hits.reduce((html, image) => {
       return html + imageCard(image);
-      }, '');
-    
-    gallery.innerHTML = imagesHTML;
+    }, '');
+
+    gallery.insertAdjacentHTML('beforeend', imagesHTML);
     modal.refresh();
 
-    })
-  .catch((error) => {
-		  showAlert(error.toString());
-  })
+    if (currentPage * perPage >= totalHits) {
+      loadMoreBtn.style.display = 'none';
+      iziToast.error({
+        title: 'Error',
+        message: "We're sorry, but you've reached the end of search results.",
+        position: 'topRight',
+      });
+    } else {
+      loadMoreBtn.style.display = 'block';
+      const scrollImages = document
+        .querySelector('.gallery img')
+        .getBoundingClientRect().height;
+      window.scrollBy({
+        top: scrollImages * 2,
+        behavior: 'smooth',
+      });
+    }
+  } catch (error) {
+    hideLoader();
+    iziToast.error({
+      title: 'Error',
+      message: error.message,
+      position: 'topRight',
+    });
+  }
+}
+
+fetchUsersBtn.addEventListener('submit', event => {
+  event.preventDefault();
+
+  const searchQuery = textInput.value.trim();
+  currentPage = 1;
+  searchImages(searchQuery, currentPage);
+  fetchUsersBtn.reset();
+});
+
+loadMoreBtn.addEventListener('click', () => {
+  currentPage += 1;
+  const searchQuery = textInput.value.trim();
+  searchImages(searchQuery, currentPage);
 });
 
 function imageCard(images) {
@@ -86,6 +135,6 @@ function imageCard(images) {
           <span class="image-value">${images.downloads}</span>
         </div>
       </div>
-    </li>
-  `;
-};
+    </li>`
+
+}

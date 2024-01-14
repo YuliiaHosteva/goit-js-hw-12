@@ -8,6 +8,7 @@
   column-gap: 24px;
   margin: auto;
   list-style-type: none;
+  margin-bottom: 32px;
 
 }
 
@@ -153,4 +154,26 @@ li:hover {
   font-family: Montserrat sans-serif;
   font-size: 16px;
   font-weight: 400;
+}
+
+.load-more-btn {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #fff;
+  font-family: Montserrat sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: 0.04em;
+  background: #4e75ff;
+  margin: 0 auto;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  border: none;
+}
+
+.load-more-btn:hover {
+  background: #6c8cff;
 }
