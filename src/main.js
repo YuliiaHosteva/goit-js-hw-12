@@ -1,140 +1,152 @@
-import SimpleLightbox from "simplelightbox";
-import "simplelightbox/dist/simple-lightbox.min.css";
-import iziToast from "izitoast";
-import "izitoast/dist/css/iziToast.min.css";
-import axios from "axios";
+import SimpleLightbox from 'simplelightbox';
+import 'simplelightbox/dist/simple-lightbox.min.css';
+import iziToast from 'izitoast';
+import 'izitoast/dist/css/iziToast.min.css';
+import axios from 'axios';
 
-const fetchUsersBtn = document.querySelector(".form");
-const gallery = document.querySelector(".gallery");
-const textInput = document.querySelector('.text-input');
-const loadMoreBtn = document.querySelector('.load-more-btn');
-const modal = new SimpleLightbox('.gallery a', {
-  captionsData: 'alt',
+const form = document.querySelector('.form');
+const gallery = document.querySelector('.gallery');
+const galleryBox = document.querySelector('.gallery-box');
+const loaderTop = document.querySelector('.loader-top');
+const loaderBottom = document.querySelector('.loader-bottom');
+const input = document.querySelector('input');
+const loadImg = document.querySelector('.load-image');
+const body = document.querySelector('body');
+
+let page = 1;
+let q = 'cat';
+let per_page = 40;
+
+const lightbox = new SimpleLightbox('.gallery a', {
+  nav: true,
   captionDelay: 250,
+  captionsData: 'alt',
+  close: true,
+  enableKeyboard: true,
+  docClose: true,
 });
 
-const loader = document.querySelector('.loader');
-loader.style.display = 'none';
+form.addEventListener('submit', onSubmit);
+loadImg.addEventListener('click', loadMore);
 
-const API_KEY = '41611095-6f6895f75fda0efc7328923df';
-let currentPage = 1;
-const perPage = 40;
+async function onSubmit(event) {
+  event.preventDefault();
+  loaderTop.style.display = 'block';
+  loadImg.style.display = 'none';
+  page = 1;
+  q = event.target.elements.search.value.trim();
 
-function showLoader() {
-  loader.style.display = 'block';
-}
-
-function hideLoader() {
-  loader.style.display = 'none';
-}
-
-async function searchImages(query, currentPage) {
-  const requestParams = {
-    key: API_KEY,
-    q: query,
-    image_type: 'photo',
-    orientation: 'horizontal',
-    safesearch: true,
-    page: currentPage,
-    per_page: perPage,
-  };
-
-  const searchParams = new URLSearchParams(requestParams);
-
-  showLoader();
+  if (!q) {
+    gallery.innerHTML = '';
+    iziToast.info({
+      position: 'topRight',
+      message: 'Error enter any symbols',
+    });
+    loaderTop.style.display = 'none';
+    return;
+  }
 
   try {
-    const response = await axios.get(`https://pixabay.com/api/?${searchParams}`);
-    hideLoader();
+    const {
+      data: { hits, totalHits },
+    } = await searchImg(q, page);
 
-    const { hits, totalHits } = response.data;
-    if (hits.length === 0) {
-      iziToast.error({
-        title: 'Error',
-        message: "We're sorry, but you've reached the end of search results.",
-        messageColor: '#FAFAFB',
-        backgroundColor: '#4285F4',
-        position: 'topRight'
-      });
-      return;
-    }
-
-    if (currentPage === 1) {
-      gallery.innerHTML = '';
-    }
-
-    const imagesHTML = hits.reduce((html, image) => {
-      return html + imageCard(image);
-    }, '');
-
-    gallery.insertAdjacentHTML('beforeend', imagesHTML);
-    modal.refresh();
-
-    if (currentPage * perPage >= totalHits) {
-      loadMoreBtn.style.display = 'none';
-      iziToast.error({
-        title: 'Error',
-        message: "We're sorry, but you've reached the end of search results.",
+    if (hits.length > 0) {
+      loaderTop.style.display = 'none';
+      gallery.innerHTML = renderImg(hits);
+      lightbox.refresh();
+      iziToast.success({
         position: 'topRight',
+        message: `We found ${totalHits} photos`,
       });
+      loadImg.style.display = 'block';
     } else {
-      loadMoreBtn.style.display = 'block';
-      const scrollImages = document
-        .querySelector('.gallery img')
-        .getBoundingClientRect().height;
-      window.scrollBy({
-        top: scrollImages * 2,
-        behavior: 'smooth',
+      gallery.innerHTML = '';
+      iziToast.error({
+        position: 'topRight',
+        message:
+          'Sorry, there are no images matching your search query. Please try again!',
       });
+    }
+
+    if (totalHits <= per_page) {
+      loadImg.style.display = 'none';
     }
   } catch (error) {
-    hideLoader();
-    iziToast.error({
-      title: 'Error',
-      message: error.message,
-      position: 'topRight',
-    });
+    console.log('Error');
+  } finally {
+    loaderTop.style.display = 'none';
+    event.target.reset();
   }
 }
 
-fetchUsersBtn.addEventListener('submit', event => {
-  event.preventDefault();
+function searchImg(q, page) {
+  axios.defaults.baseURL = 'https://pixabay.com';
 
-  const searchQuery = textInput.value.trim();
-  currentPage = 1;
-  searchImages(searchQuery, currentPage);
-  fetchUsersBtn.reset();
-});
+  return axios.get('/api/', {
+    params: {
+      key: '37773269-50f55f614e71cb99e92638715',
+      q,
+      image_type: 'photo',
+      orientation: 'horizontal',
+      safesearch: true,
+      page,
+      per_page: 40,
+    },
+  });
+}
 
-loadMoreBtn.addEventListener('click', () => {
-  currentPage += 1;
-  const searchQuery = textInput.value.trim();
-  searchImages(searchQuery, currentPage);
-});
-
-function imageCard(images) {
-  return `<li>
-      <a href="${images.largeImageURL}">
-        <img src="${images.webformatURL}" alt="${images.tags}">
-      </a>
-      <div class="info">
-        <div class="image-info">
-          <span>Likes</span>
-          <span class="image-value">${images.likes}</span>
-        </div>
-        <div class="image-info">
-          <span>Views</span>
-          <span class="image-value">${images.views}</span>
-        </div>
-        <div class="image-info">
-          <span>Comments</span>
-          <span class="image-value">${images.comments}</span>
-        </div>
-        <div class="image-info">
-          <span>Downloads</span>
-          <span class="image-value">${images.downloads}</span>
-        </div>
+function renderImg(hits = []) {
+  return hits.reduce((html, hit) => {
+    return (
+      html +
+      `<li class="gallery-item">
+        <a href=${hit.largeImageURL}>
+          <img class="gallery-img" src =${hit.webformatURL} alt=${hit.tags}/>
+        </a>
+        <div class="gallery-text-box">
+          <p>Likes: <span class="text-value">${hit.likes}</span></p>
+          <p>Views: <span class="text-value">${hit.views}</span></p>
+          <p>Comments: <span class="text-value">${hit.comments}</span></p>
+          <p>Downloads: <span class="text-value">${hit.downloads}</span></p>
       </div>
-    </li>`
+      </li>`
+    );
+  }, '');
+}
 
+async function loadMore(event) {
+  loaderBottom.style.display = 'block';
+  loadImg.style.display = 'none';
+  const listItem = document.querySelector('.gallery-item:first-child');
+  const itemHeight = listItem.getBoundingClientRect().height;
+
+  try {
+    page += 1;
+
+    const {
+      data: { hits, totalHits },
+    } = await searchImg(q, page);
+    const totalPage = Math.ceil(totalHits / per_page);
+
+    loadImg.style.display = 'block';
+    gallery.insertAdjacentHTML('beforeend', renderImg(hits));
+    lightbox.refresh();
+
+    if (page === totalPage) {
+      loadImg.style.display = 'none';
+      return iziToast.info({
+        position: 'topRight',
+        message: `We're sorry, but you've reached the end of search results.`,
+      });
+    }
+  } catch (error) {
+    console.log(error);
+  } finally {
+    loaderBottom.style.display = 'none';
+    window.scrollBy({
+      top: 2 * itemHeight,
+      behavior: 'smooth',
+    });
+  }
 }
