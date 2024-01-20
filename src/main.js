@@ -71,6 +71,10 @@ async function onSubmit(event) {
 
     if (totalHits <= per_page) {
       loadImg.style.display = 'none';
+      return iziToast.info({
+        position: 'bottomRight',
+        message: `We're sorry, but you've reached the end of search results.`,
+      });
     }
   } catch (error) {
     console.log('Error');
@@ -85,7 +89,7 @@ function searchImg(q, page) {
 
   return axios.get('/api/', {
     params: {
-      key: '37773269-50f55f614e71cb99e92638715',
+      key: '41611095-6f6895f75fda0efc7328923df',
       q,
       image_type: 'photo',
       orientation: 'horizontal',
@@ -133,10 +137,10 @@ async function loadMore(event) {
     gallery.insertAdjacentHTML('beforeend', renderImg(hits));
     lightbox.refresh();
 
-    if (page === totalPage) {
+    if (hits.length < per_page || page >= totalPage) {
       loadImg.style.display = 'none';
       return iziToast.info({
-        position: 'topRight',
+        position: 'bottomRight',
         message: `We're sorry, but you've reached the end of search results.`,
       });
     }
